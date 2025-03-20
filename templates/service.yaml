@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-gateway
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.ports.http }}
+      targetPort: {{ .Values.ports.http }}
+    - name: https
+      port: {{ .Values.ports.https }}
+      targetPort: {{ .Values.ports.https }}
+    - name: ssh-netconf
+      port: {{ .Values.ports.sshNetconf }}
+      targetPort: {{ .Values.ports.sshNetconf }}
+    - name: tls-netconf
+      port: {{ .Values.ports.tlsNetconf }}
+      targetPort: {{ .Values.ports.tlsNetconf }}
+  selector:
+    app: traefik-gateway
+

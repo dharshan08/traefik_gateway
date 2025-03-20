@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-gateway
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: gateway.{{ .Values.traefik.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-gateway
+                port:
+                  number: 443
+

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-gateway
+  labels:
+    app: traefik-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik-gateway
+  template:
+    metadata:
+      labels:
+        app: traefik-gateway
+    spec:
+      containers:
+        - name: traefik
+          image: "{{ .Values.traefik.image }}"
+          args:
+            - --serverstransport.insecureskipverify=true
+            - --log.level={{ .Values.traefik.logLevel }}
+            - --global.sendanonymoususage=false
+            - --global.checkNewVersion=false
+            - --api.insecure=true
+            - --api.dashboard=true
+            - --api.debug=true
+            - --ping
+            - --accesslog=false
+            - --entrypoints.web.address=:{{ .Values.ports.http }}
+            - --entrypoints.web.http.redirections.entrypoint.to=websecure  # Removing websecure redirection
+            - --entrypoints.web.http.redirections.entrypoint.scheme=https  # No HTTPS redirection
+            - --entrypoints.websecure.http.tls.domains[0].main=gateway.{{ .Values.traefik.domain }}
+            - --entrypoints.websecure.http.tls.domains[0].sans=*.{{ .Values.traefik.domain }}
+            - --entrypoints.websecure.address=:{{ .Values.ports.https }}
+            - --entrypoints.ssh-netconf-callhome.address=:{{ .Values.ports.sshNetconf }}
+            - --entrypoints.tls-netconf-callhome.address=:{{ .Values.ports.tlsNetconf }}
+            - --providers.kubernetescrd
+            - --providers.kubernetesingress
+            - --providers.file.directory=/etc/traefik/conf.d/
+            - --providers.file.watch=true
+          ports:
+            - name: http
+              containerPort: {{ .Values.ports.http }}
+            - name: https
+              containerPort: {{ .Values.ports.https }}
+            - name: ssh-netconf
+              containerPort: {{ .Values.ports.sshNetconf }}
+            - name: tls-netconf
+              containerPort: {{ .Values.ports.tlsNetconf }}
+          volumeMounts:
+            - name: middleware-config
+              mountPath: /etc/traefik/conf.d/middleware.yaml
+              subPath: middleware.yaml
+      volumes:
+        - name: middleware-config
+          configMap:
+            name: traefik-middleware
