@@ -1,58 +1,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: traefik-gateway
+  name: traefik-deployment
   labels:
-    app: traefik-gateway
+    app: traefik
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: traefik-gateway
+      app: traefik
   template:
     metadata:
       labels:
-        app: traefik-gateway
+        app: traefik
     spec:
+      serviceAccountName: traefik-account
       containers:
         - name: traefik
-          image: "{{ .Values.traefik.image }}"
+          image: traefik:v2.9.6
           args:
+            - --api.insecure
             - --serverstransport.insecureskipverify=true
-            - --log.level={{ .Values.traefik.logLevel }}
+            - --log.level=DEBUG
             - --global.sendanonymoususage=false
             - --global.checkNewVersion=false
-            - --api.insecure=true
             - --api.dashboard=true
             - --api.debug=true
-            - --ping
             - --accesslog=false
-            - --entrypoints.web.address=:{{ .Values.ports.http }}
-            - --entrypoints.web.http.redirections.entrypoint.to=websecure  # Removing websecure redirection
-            - --entrypoints.web.http.redirections.entrypoint.scheme=https  # No HTTPS redirection
-            - --entrypoints.websecure.http.tls.domains[0].main=gateway.{{ .Values.traefik.domain }}
-            - --entrypoints.websecure.http.tls.domains[0].sans=*.{{ .Values.traefik.domain }}
-            - --entrypoints.websecure.address=:{{ .Values.ports.https }}
-            - --entrypoints.ssh-netconf-callhome.address=:{{ .Values.ports.sshNetconf }}
-            - --entrypoints.tls-netconf-callhome.address=:{{ .Values.ports.tlsNetconf }}
-            - --providers.kubernetescrd
+            - --entrypoints.web.address=:80
+            - --entrypoints.web.http.redirections.entrypoint.to=websecure
+            - --entrypoints.web.http.redirections.entrypoint.scheme=https
+            - --entrypoints.websecure.address=:30460
+            - --entrypoints.websecure.http.tls.domains[0].main=gateway.virtual33.myguest.virtualbox.org
+            - --entrypoints.websecure.http.tls.domains[0].sans=*.virtual33.myguest.virtualbox.org
+            - --entrypoints.ssh-netconf-callhome.address=:4334
+            - --entrypoints.tls-netconf-callhome.address=:4335
             - --providers.kubernetesingress
-            - --providers.file.directory=/etc/traefik/conf.d/
-            - --providers.file.watch=true
+            - --providers.kubernetescrd
           ports:
-            - name: http
-              containerPort: {{ .Values.ports.http }}
-            - name: https
-              containerPort: {{ .Values.ports.https }}
-            - name: ssh-netconf
-              containerPort: {{ .Values.ports.sshNetconf }}
+            - name: web
+              containerPort: 80
+            - name: dashboard
+              containerPort: 8080
+            - name: websecure
+              containerPort: 443
             - name: tls-netconf
-              containerPort: {{ .Values.ports.tlsNetconf }}
-          volumeMounts:
-            - name: middleware-config
-              mountPath: /etc/traefik/conf.d/middleware.yaml
-              subPath: middleware.yaml
-      volumes:
-        - name: middleware-config
-          configMap:
-            name: traefik-middleware
+              containerPort: 4335
+            - name: ssh-netconf
+              containerPort: 4334

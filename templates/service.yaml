@@ -1,22 +1,37 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: traefik-gateway
+  name: traefik-dashboard-service
+
 spec:
   type: NodePort
   ports:
-    - name: http
-      port: {{ .Values.ports.http }}
-      targetPort: {{ .Values.ports.http }}
-    - name: https
-      port: {{ .Values.ports.https }}
-      targetPort: {{ .Values.ports.https }}
-    - name: ssh-netconf
-      port: {{ .Values.ports.sshNetconf }}
-      targetPort: {{ .Values.ports.sshNetconf }}
-    - name: tls-netconf
-      port: {{ .Values.ports.tlsNetconf }}
-      targetPort: {{ .Values.ports.tlsNetconf }}
+    - port: 8080
+      targetPort: dashboard
   selector:
-    app: traefik-gateway
+    app: traefik
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-web-service
 
+spec:
+  type: NodePort
+  ports:
+    - targetPort: web
+      port: 80
+  selector:
+    app: traefik
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-websecure-service
+spec:
+  type: NodePort
+  ports:
+    - port: 443
+      targetPort: websecure
+  selector:
+    app: traefik
