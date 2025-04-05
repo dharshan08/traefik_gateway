@@ -5,14 +5,13 @@ metadata:
   namespace: default
 spec:
   entryPoints:
-    - websecure  # Only allow HTTPS
+    - websecure 
   routes:
-    - match: Host(`gateway.virtual33.myguest.virtualbox.org`) && PathPrefix(`/traefik`)
+    - match: Host(`gateway.virtual33.myguest.virtualbox.org`) 
       kind: Rule
       services:
         - name: api@internal
           kind: TraefikService
       middlewares:
-        - name: strip-prefix
-  tls:
-    secretName: default-certificate
+        - name: default-headers
+

@@ -1,12 +1,12 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: strip-prefix
+  name: strip-dashboard-prefix
   namespace: default
 spec:
-  stripPrefix:
-    prefixes:
-      - /traefik
+  stripPrefixRegex:
+    regex:
+      - "^/dashboard"
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traefik
+  namespace: default
   labels:
     app: traefik
 spec:
@@ -19,7 +20,6 @@ spec:
         - name: traefik
           image: traefik:v2.9.6
           args:
-            - --api.insecure
             - --serverstransport.insecureskipverify=true
             - --log.level=DEBUG
             - --global.sendanonymoususage=false
